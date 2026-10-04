@@ -6,7 +6,7 @@
 
 <p align="center">
   Finds the SDR radios plugged into your Windows PC and the SDR apps installed on it,
-  then sets up the drivers they need -- and lets you undo it.
+  then sets up the drivers they need.
 </p>
 
 <p align="center">
