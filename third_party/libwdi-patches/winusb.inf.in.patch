@@ -1,0 +1,44 @@
+diff --git a/libwdi/winusb.inf.in b/libwdi/winusb.inf.in
+index 0c0774e..51d9055 100644
+--- a/libwdi/winusb.inf.in
++++ b/libwdi/winusb.inf.in
+@@ -64,37 +64,4 @@ AddReg = #USE_DEVICE_INTERFACE_GUID#
+ [AddDeviceInterfaceGUID]
+ HKR,,DeviceInterfaceGUIDs,0x10000,%DeviceGUID%
+ 
+-[USB_Install.NTx86.CoInstallers]
+-AddReg    = CoInstallers_AddReg
+-CopyFiles = CoInstallers_CopyFiles
+-
+-[USB_Install.NTamd64.CoInstallers]
+-AddReg    = CoInstallers_AddReg
+-CopyFiles = CoInstallers_CopyFiles
+-
+-[USB_Install.NTarm64.CoInstallers]
+-;
+-
+-[CoInstallers_AddReg]
+-HKR,,CoInstallers32,0x00010000,"WdfCoInstaller#WDF_VERSION#.dll,WdfCoInstaller","WinUSBCoInstaller2.dll"
+-
+-[CoInstallers_CopyFiles]
+-WinUSBCoInstaller2.dll
+-WdfCoInstaller#WDF_VERSION#.dll
+-
+-[DestinationDirs]
+-CoInstallers_CopyFiles = 11
+-
+-[SourceDisksNames]
+-1 = %SourceName%
+-
+-[SourceDisksFiles.x86]
+-WinUSBCoInstaller2.dll = 1,x86
+-WdfCoInstaller#WDF_VERSION#.dll = 1,x86
+-
+-[SourceDisksFiles.amd64]
+-WinUSBCoInstaller2.dll = 1,amd64
+-WdfCoInstaller#WDF_VERSION#.dll = 1,amd64
+-
+-[SourceDisksFiles.arm64]
+-;
+\ No newline at end of file
++; (co-installer and SourceDisks sections removed for inbox WinUSB on Windows 10/11 -- SDRLoader patch)

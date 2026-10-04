@@ -1,0 +1,16 @@
+# Normalise all text to LF in the repository and working tree, so the MinGW /
+# MSYS2 build (and the bash scripts) behave the same on every machine.
+* text=auto eol=lf
+
+# Scripts that must stay LF.
+*.sh    text eol=lf
+*.ps1   text eol=lf
+
+# Patch files must apply byte-for-byte: never let git touch their contents.
+*.patch -text
+
+# Binary assets.
+*.png  binary
+*.ico  binary
+*.bmp  binary
+*.exe  binary

@@ -1,0 +1,19 @@
+diff --git a/libwdi/libwdi.c b/libwdi/libwdi.c
+index 1501b45..0c690d0 100644
+--- a/libwdi/libwdi.c
++++ b/libwdi/libwdi.c
+@@ -723,11 +723,10 @@ BOOL LIBWDI_API wdi_is_driver_supported(int driver_type, VS_FIXEDFILEINFO* drive
+ 
+ 	switch (driver_type) {
+ 	case WDI_WINUSB:
+-#if defined(WDK_DIR)
++		// WinUSB is an inbox driver on Windows 7+, so it is always available even
++		// without the WDK co-installers embedded. (SDRLoader patch;
++		// upstream returns FALSE unless WDK_DIR is defined at build time.)
+ 		return TRUE;
+-#else
+-		return FALSE;
+-#endif
+ 	case WDI_LIBUSB0:
+ #if defined(LIBUSB0_DIR)
+ 		return (platform_arch == IMAGE_FILE_MACHINE_ARM64 || platform_arch == IMAGE_FILE_MACHINE_AMD64 || platform_arch == IMAGE_FILE_MACHINE_I386);

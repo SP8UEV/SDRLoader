@@ -1,0 +1,20 @@
+# Build output
+/build/
+/build-*/
+/dist/
+/dist-*/
+*.zip
+
+# Stray build artifacts (sources never carry these)
+*.o
+*.a
+*.obj
+*.exe
+
+# Transient files the program writes
+*.part
+*.sdi-new
+
+# libwdi source checkout built by scripts/build-libwdi.sh (not committed;
+# it is cloned on demand and its patches live in third_party/libwdi-patches/)
+/external/

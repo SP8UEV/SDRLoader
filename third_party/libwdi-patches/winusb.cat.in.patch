@@ -1,0 +1,12 @@
+diff --git a/libwdi/winusb.cat.in b/libwdi/winusb.cat.in
+index 9604596..28495e9 100644
+--- a/libwdi/winusb.cat.in
++++ b/libwdi/winusb.cat.in
+@@ -1,5 +1 @@
+-# List of the binaries referenced by the WinUSB inf
+-# These are used to generate and self-sign a .cat file
+-
+-WdfCoInstaller#WDF_VERSION#.dll
+-winusbcoinstaller2.dll
+\ No newline at end of file
++# inbox WinUSB: no extra binaries to sign (SDRLoader patch)

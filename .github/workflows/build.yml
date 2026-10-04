@@ -1,0 +1,86 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            python
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+
+      # --- default build: MIT only, Zadig as the driver step --------------------
+      - name: Build (default, no libwdi)
+        shell: msys2 {0}
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: Test (default)
+        shell: msys2 {0}
+        run: ./build/sdi-tests.exe
+
+      # --- libwdi build: automatic WinUSB install -------------------------------
+      - name: Build libwdi (patched, WDK-free inbox WinUSB)
+        shell: msys2 {0}
+        run: bash scripts/build-libwdi.sh --clone external/libwdi v1.5.1
+
+      - name: Build (with automatic WinUSB)
+        shell: msys2 {0}
+        run: |
+          cmake -S . -B build-wdi -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DSDI_WITH_LIBWDI=ON \
+            -DLIBWDI_INCLUDE_DIR=external/libwdi/libwdi \
+            -DLIBWDI_LIBRARY=external/libwdi/libwdi/libwdi.a
+          cmake --build build-wdi
+
+      - name: Test (with automatic WinUSB)
+        shell: msys2 {0}
+        run: ./build-wdi/sdi-tests.exe
+
+      # --- packages -------------------------------------------------------------
+      - name: Package default (fetches drivers from their publishers when run)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build/sdrloader.exe, build/sdrloader-cli.exe, LICENSE, README.md, THIRD-PARTY.md dist/
+          Compress-Archive -Path dist/* -DestinationPath SDRLoader.zip
+
+      - name: Offline package (redistributable files with their source code)
+        shell: pwsh
+        run: |
+          ./scripts/fetch-payload.ps1 -Cli build/sdrloader-cli.exe -Out dist/payload
+          Compress-Archive -Path dist/* -DestinationPath SDRLoader-offline.zip
+
+      - name: Package with automatic WinUSB (includes libwdi LGPL material)
+        shell: pwsh
+        run: |
+          $d = 'dist-winusb'
+          New-Item -ItemType Directory -Force $d, "$d/libwdi-lgpl" | Out-Null
+          Copy-Item build-wdi/sdrloader.exe, build-wdi/sdrloader-cli.exe, LICENSE, README.md, THIRD-PARTY.md $d/
+          # LGPL: ship the modifications (the patches + their README) and the
+          # script that rebuilds/relinks libwdi, so the program stays relinkable.
+          Copy-Item -Recurse third_party/libwdi-patches/* "$d/libwdi-lgpl/"
+          Copy-Item scripts/build-libwdi.sh "$d/libwdi-lgpl/"
+          Compress-Archive -Path "$d/*" -DestinationPath SDRLoader-winusb.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SDRLoader
+          path: |
+            SDRLoader.zip
+            SDRLoader-offline.zip
+            SDRLoader-winusb.zip
