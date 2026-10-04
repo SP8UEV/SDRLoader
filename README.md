@@ -1,124 +1,126 @@
-# SDRLoader
+<p align="center">
+  <img src="res/logo.png" alt="SDRLoader" width="300">
+</p>
 
-An open-source helper for Windows 10 and 11. It finds the SDR radios plugged
-into the computer and the SDR programs installed on it. Then it installs what
-they are missing. You decide what happens, the files come from their
-publishers and are checked before use, and every replaced file can be put back.
+<h1 align="center">SDRLoader</h1>
 
-*(Polski opis niżej.)*
+<p align="center">
+  Finds the SDR radios plugged into your Windows PC and the SDR apps installed on it,
+  then sets up the drivers they need &mdash; and lets you undo it.
+</p>
+
+<p align="center">
+  <a href="../../actions/workflows/build.yml"><img src="../../actions/workflows/build.yml/badge.svg" alt="build status"></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT licence">
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0a7bbb.svg" alt="Windows 10 / 11">
+  <img src="https://img.shields.io/badge/C%2B%2B-17-00599c.svg" alt="C++17">
+</p>
+
+---
+
+**SDRLoader** is a small, open-source helper for Windows 10 and 11. It scans for the
+SDR radios that are plugged in and the SDR programs on the computer, then proposes
+exactly what to install: the USB driver each radio needs (WinUSB &mdash; automatically,
+or via Zadig), `rtlsdr.dll` where a program looks for it, and the manufacturers'
+own driver installers. **You decide what happens, every fetched file is verified
+before use, and every replaced file is backed up so the last run can be undone.**
+
+It is a companion to closed-source SDR programs (such as ChameleonSDR) that cannot
+ship GPL drivers themselves: SDRLoader fetches the drivers from their publishers, at
+your request, the way you would by hand.
 
 ## What it does
 
-1. **Radios.** It lists the SDR radios that are plugged in, and the USB driver
-   Windows gave each one. Examples: an RTL-SDR still on the DVB-T TV driver, an
-   RSP with no driver, a HackRF that some other installer put on libusbK.
-2. **Programs.** It finds the SDR programs on the computer, and which
-   `rtlsdr.dll` each of them has, if any.
-3. **Plan.** It proposes what to do: install WinUSB for a radio (automatically
-   where this build can, see below; otherwise Zadig), run a manufacturer's
-   driver installer, put `rtlsdr.dll` where a program looks for it, or install
-   the Visual C++ runtime that DLL needs.
-4. **You tick, then press *Install ticked*.** Every file is checked first. Its
-   size and SHA-256 must match what the publisher published, or it must carry
-   the publisher's digital signature. A file that fails is not used. A file
-   that is replaced is backed up first, and *Undo last installation* puts it
-   back.
+1. **Radios.** Lists the SDR radios that are plugged in and the USB driver Windows
+   gave each one (e.g. an RTL-SDR still on the DVB-T TV driver, an RSP with no driver).
+2. **Programs.** Finds the SDR programs on the PC and which `rtlsdr.dll`, if any, each has.
+3. **Plan.** Proposes the actions: install WinUSB, run a manufacturer's installer, put
+   `rtlsdr.dll` in place, or install the Visual C++ runtime a driver needs.
+4. **You tick, then press _Install ticked_.** Each file is checked first (size + SHA-256,
+   or the publisher's digital signature). A replaced file is backed up, and
+   _Undo last installation_ puts it back.
 
 ## What it never does
 
-* Nothing is changed until you press *Install ticked*. Items that would
-  replace an existing file start unticked.
-* Nothing about your computer is sent anywhere. The program goes online only
-  to fetch a file you asked for, from that file's publisher.
-* It never touches programs that ship their own drivers (SDR++, SDR Console,
-  CubicSDR, SDRangel, SatDump, Gqrx). It only reports them.
-* It never redistributes manufacturers' software. Their installers are
-  downloaded from them and run in front of you, with their own licence terms.
-  The SDRplay API is only linked: you download it from SDRplay.
-* It never searches whole drives unless you ask. The standard scan looks only
-  where programs normally are: the installed-programs list, Program Files, the
-  Start menu and desktop shortcuts, Desktop, Downloads, Documents and folders
-  at the root of a drive. *Full scan of all drives* goes further, and only
-  when you press it. Both scans look at file names only.
+- Nothing changes until you press **Install ticked**; items that would replace an
+  existing file start unticked.
+- **Nothing about your computer is sent anywhere.** It goes online only to fetch a file
+  you asked for, from that file's publisher.
+- It never redistributes manufacturers' software &mdash; their installers are downloaded
+  from them and run in front of you, with their own licences.
+- It never touches programs that ship their own drivers (SDR++, SDRangel, SatDump,
+  CubicSDR, Gqrx, SDR Console) &mdash; it only reports them.
+- It never scans whole drives unless you ask, and only ever reads file **names**.
 
-## Radios
+## Supported radios
 
-### Automatic WinUSB install (and the certificate)
-
-Giving an RTL-SDR the WinUSB driver is the step beginners stumble on. This
-program can do it **without the Zadig window**, using **libwdi** (LGPL-2.1,
-the library Zadig itself is built on). For the one radio it builds a small
-driver package (an INF), signs it with a certificate it generates, adds that
-certificate to this computer's trusted-certificate stores so Windows accepts
-the driver, and asks Windows to bind WinUSB. This is exactly what Zadig does
-when you press *Install Driver*.
-
-Because it adds a driver certificate and changes a device driver, it needs
-administrator rights **and** a clear yes: before anything happens, a prompt
-spells out each of these steps, and nothing runs until you agree. It changes
-only that one radio's driver, which Device Manager can undo, and the
-certificate can be removed in `certmgr.msc`.
-
-This path is compiled in only when the build includes libwdi (see *Building*).
-Without it, the program proposes Zadig instead and the step is manual.
-
-| Radio | What it needs on Windows |
+| Radio | What SDRLoader sets up |
 |---|---|
-| RTL-SDR (RTL2832U, incl. RTL-SDR Blog V3/V4) | WinUSB on interface 0 (installed automatically, or with Zadig), plus `rtlsdr.dll` for the programs that load it |
-| HackRF One, Airspy R2/Mini, Airspy HF+ | WinUSB, which Windows 8 and later assign by themselves |
-| SDRplay RSP | The SDRplay API (it contains the USB driver) |
-| Nuand bladeRF | Nuand's installer (driver, libbladeRF, FPGA images) |
-| ADALM-PLUTO | Analog Devices' USB drivers |
-| LimeSDR-USB | WinUSB (installed automatically, or with Zadig) |
-| Ettus USRP B200/B210 | WinUSB (installed automatically, or with Zadig) |
-| LimeSDR Mini / Mini 2 | FTDI's D3XX driver for the FT601 bridge (WinUSB can't drive it); its download page is opened |
-| FUNcube Dongle Pro/Pro+ | Nothing (Windows' audio and HID drivers) |
+| **RTL-SDR** (RTL2832U, incl. Blog V3/V4) | WinUSB (automatic, or via Zadig) + `rtlsdr.dll` for the programs that load it |
+| **HackRF One**, **Airspy R2 / Mini / HF+** | WinUSB &mdash; usually already assigned by Windows (WCID) |
+| **Nuand bladeRF** | Nuand's installer (driver, libbladeRF, FPGA images) |
+| **ADALM-PLUTO** | Analog Devices' USB drivers |
+| **SDRplay RSP** | opens the SDRplay API download page |
+| **LimeSDR-USB**, **Ettus USRP B200 / B210** | WinUSB (automatic, or via Zadig) |
+| **LimeSDR Mini / Mini 2** | opens FTDI's D3XX driver page (its FT601 bridge can't use WinUSB) |
+| **FUNcube Dongle Pro / Pro+** | nothing &mdash; Windows' own audio + HID drivers |
 
-To actually *use* a LimeSDR or USRP you still install its host software (LimeSuite
-or UHD); SDRLoader only sets up the USB driver.
+To actually *use* a LimeSDR or USRP you still install its host software (LimeSuite or
+UHD); SDRLoader only sets up the USB driver.
 
-## Programs
+## Programs it fills `rtlsdr.dll` for
 
-| Program | rtlsdr.dll |
+| Program | `rtlsdr.dll` |
 |---|---|
 | ChameleonSDR | 64-bit, in `%APPDATA%\C-SDR\PUT_SDR_FILES_HERE` |
-| SDR# | Beside `SDRSharp*.exe`, in the build the program uses (x86 or x64) |
-| HDSDR | Beside `HDSDR.exe`, when an RTL ExtIO plug-in is there |
-| SDR++, SDR Console, CubicSDR, SDRangel, SatDump, Gqrx | Ship their own: reported, never changed |
-| SDRuno, SDRconnect | Use the SDRplay API |
-
-A radio or a program is added in one place, `src/catalog.cpp`.
+| SDR# (SDRSharp) | beside `SDRSharp*.exe`, in the build it uses (x86 / x64) |
+| HDSDR | beside `HDSDR.exe`, when an RTL ExtIO plug-in is there |
+| SDR++, SDRangel, SatDump, CubicSDR, Gqrx, SDR Console | ship their own &mdash; left untouched |
 
 ## Download
 
-* **`SDRLoader.zip`**: the program. It fetches each file from its
-  publisher when needed.
-* **`SDRLoader-offline.zip`**: the same, plus a `payload\` folder
-  with the open-source files already inside, each with its source code. See
-  `THIRD-PARTY.md` for what may go in and why.
+Builds are produced by CI on every push (see the **Actions** tab). Each run gives three
+archives:
 
-Two programs are included. `sdrloader.exe` is the window.
-`sdrloader-cli.exe --scan` prints the same scan as text, which is
-useful for support requests.
+- **`SDRLoader.zip`** &mdash; the program; it fetches each driver from its publisher when needed.
+- **`SDRLoader-offline.zip`** &mdash; the same, plus a `payload\` folder with the open-source
+  drivers already inside, each with its source code.
+- **`SDRLoader-winusb.zip`** &mdash; built with automatic WinUSB install (libwdi), so the RTL-SDR
+  driver step needs no Zadig window.
+
+Two programs are included: `sdrloader.exe` (the window) and `sdrloader-cli.exe --scan`,
+which prints the same scan as text (handy for support requests).
+
+## Automatic WinUSB install (and the certificate)
+
+Giving an RTL-SDR, LimeSDR-USB or USRP the WinUSB driver is the step beginners stumble
+on. SDRLoader can do it **without the Zadig window**, using **libwdi** (LGPL-2.1, the
+library Zadig itself is built on): it builds a tiny WinUSB driver package for the one
+radio, signs it with a certificate it generates, adds that certificate to the machine's
+trusted stores so Windows accepts the driver, and binds WinUSB.
+
+Because it adds a driver certificate and changes a device driver, it needs administrator
+rights **and** a clear yes &mdash; a prompt spells out each step first, and nothing runs
+until you agree. It changes only that one radio's driver (undo in Device Manager; remove
+the certificate in `certmgr.msc`). This path is compiled in only when the build includes
+libwdi; otherwise SDRLoader proposes Zadig instead.
 
 ## Building
 
-You need CMake 3.16 or later and one of these compilers: MinGW-w64 GCC (MSYS2
-UCRT64 or WinLibs) or Visual Studio 2022.
+Needs CMake 3.16+ and MinGW-w64 GCC (MSYS2 UCRT64 or WinLibs). The binaries are linked
+statically, so they run with nothing installed.
 
-```
+```bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-build\sdi-tests.exe
+./build/sdi-tests.exe
 ```
 
-**Automatic WinUSB install (libwdi).** The default build does not include it,
-so the driver step is Zadig. To compile the automatic path in, build libwdi
-and point CMake at the result. `scripts/build-libwdi.sh` does the libwdi build
-(it clones libwdi `v1.5.1`, applies the patches in `third_party/libwdi-patches/`
-for a WDK-free inbox-WinUSB build, and produces `libwdi.a`):
+To compile the automatic WinUSB path in, build libwdi first (it has no CMake build of its
+own &mdash; `scripts/build-libwdi.sh` clones it, applies the patches in
+`third_party/libwdi-patches/`, and produces `libwdi.a`):
 
-```
+```bash
 scripts/build-libwdi.sh --clone external/libwdi v1.5.1
 cmake -S . -B build-wdi -G Ninja -DCMAKE_BUILD_TYPE=Release \
       -DSDI_WITH_LIBWDI=ON \
@@ -127,23 +129,19 @@ cmake -S . -B build-wdi -G Ninja -DCMAKE_BUILD_TYPE=Release \
 cmake --build build-wdi
 ```
 
-(The script prints the exact `-D…` line to use. Run it from Git Bash / MSYS2
-with the same MinGW-w64 GCC used for the project.)
+A radio or a program is added in one place: [`src/catalog.cpp`](src/catalog.cpp).
 
-libwdi is LGPL-2.1-or-later. Linking it in makes that part of the program
-LGPL: ship libwdi's source and our patches (both reproduced by the script) and
-keep the program relinkable, as the LGPL asks. See `THIRD-PARTY.md` and
-`third_party/libwdi-patches/`.
+## Licence &amp; third-party
 
-The programs are linked statically, so they need nothing installed to run.
-`scripts/fetch-payload.ps1` builds the offline package's `payload\` folder.
-`.github/workflows/build.yml` builds, tests and packages both zips.
+The code in this repository is **MIT** ([`LICENSE`](LICENSE)) and contains no third-party
+code. The drivers and installers it fetches are other people's software under their own
+licences, each from its publisher's own address &mdash; see
+[`THIRD-PARTY.md`](THIRD-PARTY.md). The optional libwdi build is LGPL-2.1; the program
+stays relinkable and the modifications are shipped (`third_party/libwdi-patches/`).
 
-## Licence
+## Trademarks
 
-The code in this repository is under the MIT licence (`LICENSE`). The
-packages it can install are other people's software under their own
-licences: see `THIRD-PARTY.md`. The names of radios, programs and companies
-are their owners' trademarks, used only to say what this works with. This
-project is not affiliated with any of them.
-
+RTL-SDR, HackRF, Airspy, SDRplay, RSP, bladeRF, ADALM-PLUTO, LimeSDR, USRP, FUNcube, SDR#,
+HDSDR, SDR++, SDR Console, CubicSDR, SDRangel, SatDump, Gqrx, SDRuno, SDRconnect, Zadig,
+FTDI and the other names are their owners' trademarks, used only to say what SDRLoader
+works with. This project is not affiliated with, or endorsed by, any of them.
