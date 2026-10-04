@@ -69,8 +69,13 @@ Without it, the program proposes Zadig instead and the step is manual.
 | SDRplay RSP | The SDRplay API (it contains the USB driver) |
 | Nuand bladeRF | Nuand's installer (driver, libbladeRF, FPGA images) |
 | ADALM-PLUTO | Analog Devices' USB drivers |
-| LimeSDR, USRP | Reported, with their drivers' status |
+| LimeSDR-USB | WinUSB (installed automatically, or with Zadig) |
+| Ettus USRP B200/B210 | WinUSB (installed automatically, or with Zadig) |
+| LimeSDR Mini / Mini 2 | FTDI's D3XX driver for the FT601 bridge (WinUSB can't drive it); its download page is opened |
 | FUNcube Dongle Pro/Pro+ | Nothing (Windows' audio and HID drivers) |
+
+To actually *use* a LimeSDR or USRP you still install its host software (LimeSuite
+or UHD); SDRLoader only sets up the USB driver.
 
 ## Programs
 

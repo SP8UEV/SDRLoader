@@ -60,6 +60,11 @@ const std::vector<Package>& packages() {
          L"Pothosware / MyriadRF", PkgKind::WebPage, L"https://downloads.myriadrf.org/builds/PothosSDR/", L"", 0,
          nullptr, nullptr, L"Open source, several licences (SoapySDR: BSL-1.0; bundled tools: GPL and others)",
          L"https://github.com/pothosware/PothosSDR", nullptr, Payload::Never},
+
+        {L"ftdi-d3xx", L"FTDI D3XX driver (for the LimeSDR Mini's FT601 USB bridge)", L"FTDI", PkgKind::WebPage,
+         L"https://ftdichip.com/drivers/d3xx-drivers/", L"", 0, nullptr, nullptr,
+         L"FTDI's driver licence (shown on their site and in the package)",
+         L"https://ftdichip.com/drivers/d3xx-drivers/", nullptr, Payload::Never},
     };
     return p;
 }
@@ -88,12 +93,13 @@ const std::vector<DeviceKind>& deviceKinds() {
          L"Driver, library and FPGA images come with Nuand's installer."},
         {L"pluto", L"ADALM-PLUTO (PlutoSDR)", 0x0456, {0xB673, 0xB674}, DriverRule::AnyDriver, -1, L"pluto",
          L"Analog Devices' drivers make it appear as a network adapter (192.168.2.1)."},
-        {L"limesdr-usb", L"LimeSDR-USB", 0x1D50, {0x6108}, DriverRule::AnyDriver, -1, nullptr,
-         L"Driver from Lime Suite (PothosSDR bundles Lime Suite)."},
-        {L"limesdr-mini", L"LimeSDR Mini (FT601)", 0x0403, {0x601F}, DriverRule::AnyDriver, -1, nullptr,
-         L"FTDI's D3XX driver (from FTDI or Lime Suite)."},
-        {L"usrp", L"Ettus USRP (B200 / B210 family)", 0x2500, {}, DriverRule::AnyDriver, -1, nullptr,
-         L"UHD's USB driver package from Ettus Research."},
+        {L"limesdr-usb", L"LimeSDR-USB", 0x1D50, {0x6108}, DriverRule::NeedsWinUsb, -1, L"zadig",
+         L"Uses WinUSB (through libusb, for LimeSuite / SoapySDR). Install LimeSuite to use it."},
+        {L"limesdr-mini", L"LimeSDR Mini / Mini 2 (FTDI FT601)", 0x0403, {0x601F}, DriverRule::AnyDriver, -1,
+         L"ftdi-d3xx",
+         L"Its FT601 bridge needs FTDI's D3XX driver -- WinUSB cannot drive it. LimeSuite bundles the driver too."},
+        {L"usrp", L"Ettus USRP B200 / B210", 0x2500, {}, DriverRule::NeedsWinUsb, -1, L"zadig",
+         L"The B200/B210 use WinUSB. Install UHD to use them; networked USRPs (N/X series) need no driver."},
         {L"funcube", L"FUNcube Dongle Pro / Pro+", 0x04D8, {0xFB56, 0xFB31}, DriverRule::NoDriverNeeded, -1, nullptr,
          L"Uses Windows' own audio and HID drivers -- nothing to install."},
     };

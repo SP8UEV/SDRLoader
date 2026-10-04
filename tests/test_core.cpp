@@ -293,6 +293,40 @@ static void testWrongDriverPlan() {
     CHECK(find(p2, L"pkg:zadig") == nullptr);
 }
 
+static void testRestOfSdrsPlan() {
+    const SystemState sys{true, true, false, L""};
+    const bool autoDrv = driverinst::available();
+    // LimeSDR-USB and USRP B2x0 now install WinUSB (automatically, or via Zadig).
+    struct {
+        uint16_t vid, pid;
+        const wchar_t* id;
+    } winusbKinds[] = {{0x1D50, 0x6108, L"limesdr-usb"}, {0x2500, 0x0020, L"usrp"}};
+    for (auto& k : winusbKinds) {
+        const DeviceKind* dk = matchDevice(k.vid, k.pid);
+        CHECK(dk && std::wstring(dk->id) == k.id && dk->rule == DriverRule::NeedsWinUsb);
+        DeviceFinding f;
+        f.kind = dk;
+        f.status = DevStatus::NoDriver;
+        f.targetVid = k.vid;
+        f.targetPid = k.pid;
+        f.targetMi = -1;
+        const auto plan = makePlan({f}, {}, sys, RtlReference{});
+        const std::wstring wk = L"winusb:" + hex4(k.vid) + L"-" + hex4(k.pid) + L"--1";
+        const PlanItem* drv = autoDrv ? find(plan, wk) : find(plan, L"pkg:zadig");
+        CHECK(drv && drv->checked);
+    }
+    // LimeSDR Mini has an FTDI FT601 bridge: WinUSB can't drive it, so offer FTDI's D3XX page.
+    const DeviceKind* mk = matchDevice(0x0403, 0x601F);
+    CHECK(mk && std::wstring(mk->id) == L"limesdr-mini" && mk->rule == DriverRule::AnyDriver);
+    CHECK(findPackage(L"ftdi-d3xx") != nullptr);
+    DeviceFinding mini;
+    mini.kind = mk;
+    mini.status = DevStatus::NoDriver;
+    const auto plan = makePlan({mini}, {}, sys, RtlReference{});
+    const PlanItem* ftdi = find(plan, L"pkg:ftdi-d3xx");
+    CHECK(ftdi && ftdi->checked && ftdi->type == ActionType::OpenPage);
+}
+
 static void testSameFileSkipped() {
     const std::wstring d = tempDir(L"same");
     const std::wstring dll = joinPath(d, L"rtlsdr.dll");
@@ -450,6 +484,7 @@ int wmain() {
     testPlan();
     testWinUsbGuid();
     testWrongDriverPlan();
+    testRestOfSdrsPlan();
     testSameFileSkipped();
     testTransactionAndUndo();
     testVerify();
