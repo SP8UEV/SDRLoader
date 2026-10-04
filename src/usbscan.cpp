@@ -1,6 +1,5 @@
 #include "usbscan.hpp"
 
-#include "i18n.hpp"
 
 #include <windows.h>
 #include <cfgmgr32.h>
@@ -151,35 +150,31 @@ std::vector<DeviceFinding> evaluateDevices(const std::vector<UsbNode>& nodes) {
 
 const wchar_t* statusText(DevStatus s) {
     switch (s) {
-        case DevStatus::Ok: return tr(L"OK", L"OK");
-        case DevStatus::WorksLibusb: return tr(L"Works (libusb)", L"Działa (libusb)");
-        case DevStatus::WrongDriver: return tr(L"Wrong driver", L"Zły sterownik");
-        case DevStatus::NoDriver: return tr(L"No driver", L"Brak sterownika");
-        default: return tr(L"Nothing needed", L"Nic nie trzeba");
+        case DevStatus::Ok: return L"OK";
+        case DevStatus::WorksLibusb: return L"Works (libusb)";
+        case DevStatus::WrongDriver: return L"Wrong driver";
+        case DevStatus::NoDriver: return L"No driver";
+        default: return L"Nothing needed";
     }
 }
 
 std::wstring adviceFor(const DeviceFinding& f) {
     const DeviceKind& k = *f.kind;
-    const std::wstring note = tr(k.noteEn, k.notePl);
+    const std::wstring note = k.note;
     const Package* fix = k.fixPackage ? findPackage(k.fixPackage) : nullptr;
     switch (f.status) {
         case DevStatus::Ok:
         case DevStatus::Info: return note;
         case DevStatus::WorksLibusb:
-            return std::wstring(tr(L"Driver ", L"Sterownik ")) + f.service +
-                   tr(L" works with programs built on libusb. Programs that use WinUSB directly need WinUSB -- "
-                      L"Zadig can switch it.",
-                      L" działa z programami opartymi na libusb. Programy, które używają bezpośrednio WinUSB, "
-                      L"potrzebują WinUSB -- Zadig może go zmienić.");
+            return std::wstring(L"Driver ") + f.service +
+                   L" works with programs built on libusb. Programs that use WinUSB directly need WinUSB -- "
+                      L"Zadig can switch it.";
         case DevStatus::WrongDriver:
-            return std::wstring(tr(L"Windows has given it the \"", L"Windows przydzielił mu sterownik \"")) + f.service +
-                   tr(L"\" driver (often the DVB-T TV driver). SDR programs need WinUSB -- Zadig replaces it, and "
-                      L"Device Manager can roll it back.",
-                      L"\" (często sterownik telewizji DVB-T). Programy SDR potrzebują WinUSB -- Zadig go "
-                      L"zamieni, a Menedżer urządzeń umie to cofnąć.");
+            return std::wstring(L"Windows has given it the \"") + f.service +
+                   L"\" driver (often the DVB-T TV driver). SDR programs need WinUSB -- Zadig replaces it, and "
+                      L"Device Manager can roll it back.";
         case DevStatus::NoDriver:
-            if (fix) return std::wstring(tr(L"Install: ", L"Zainstaluj: ")) + fix->name + L". " + note;
+            if (fix) return std::wstring(L"Install: ") + fix->name + L". " + note;
             return note;
     }
     return note;

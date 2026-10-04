@@ -1,6 +1,5 @@
 #include "util.hpp"
 
-#include "i18n.hpp"
 
 #include <bcrypt.h>
 #include <shellapi.h>
@@ -120,7 +119,7 @@ std::wstring lastErrorText(DWORD e) {
     if (msg) LocalFree(msg);
     wchar_t code[32];
     swprintf(code, 32, L"(%lu)", static_cast<unsigned long>(e));
-    return text.empty() ? std::wstring(tr(L"error ", L"błąd ")) + code : text + L" " + code;
+    return text.empty() ? std::wstring(L"error ") + code : text + L" " + code;
 }
 
 // ---------------------------------------------------------------- paths
@@ -294,8 +293,7 @@ bool copyFileAtomic(const std::wstring& from, const std::wstring& to, std::wstri
         DeleteFileW(tmp.c_str());
         err = lastErrorText(e);
         if (e == ERROR_SHARING_VIOLATION || e == ERROR_ACCESS_DENIED || e == ERROR_USER_MAPPED_FILE)
-            err += tr(L" -- is the program that uses this file still running?",
-                      L" -- czy program, który używa tego pliku, jest nadal uruchomiony?");
+            err += L" -- is the program that uses this file still running?";
         return false;
     }
     return true;
@@ -592,11 +590,11 @@ bool authenticodeSigner(const std::wstring& path, std::wstring& signer, std::wst
         }
         if (signer.empty()) {
             ok = false;
-            err = tr(L"signed, but the signer's name could not be read", L"podpisany, ale nie da się odczytać, przez kogo");
+            err = L"signed, but the signer's name could not be read";
         }
     } else {
         wchar_t b[128];
-        swprintf(b, 128, L"%ls (0x%08lX)", tr(L"no valid digital signature", L"brak ważnego podpisu cyfrowego"),
+        swprintf(b, 128, L"%ls (0x%08lX)", L"no valid digital signature",
                  static_cast<unsigned long>(r));
         err = b;
     }
@@ -647,8 +645,7 @@ bool launchAndWait(const std::wstring& file, const std::wstring& params, DWORD& 
     sei.nShow = SW_SHOWNORMAL;
     if (!ShellExecuteExW(&sei)) {
         const DWORD e = GetLastError();
-        err = e == ERROR_CANCELLED ? tr(L"cancelled: Windows asked for administrator rights and that was declined",
-                                        L"anulowano: Windows poprosił o uprawnienia administratora i odmówiono")
+        err = e == ERROR_CANCELLED ? L"cancelled: Windows asked for administrator rights and that was declined"
                                    : lastErrorText(e);
         return false;
     }

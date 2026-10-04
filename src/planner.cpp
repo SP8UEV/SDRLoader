@@ -1,7 +1,6 @@
 #include "planner.hpp"
 
 #include "driverinstall.hpp"
-#include "i18n.hpp"
 
 #include <windows.h>
 
@@ -49,9 +48,9 @@ std::wstring winUsbGuid(uint16_t vid, uint16_t pid, int mi) {
 
 std::wstring packageActionTitle(const Package& p) {
     switch (p.kind) {
-        case PkgKind::VendorInstaller: return std::wstring(tr(L"Run the installer: ", L"Uruchom instalator: ")) + p.name;
-        case PkgKind::Tool: return std::wstring(tr(L"Start ", L"Uruchom ")) + p.name;
-        case PkgKind::WebPage: return std::wstring(tr(L"Open the download page: ", L"Otwórz stronę pobierania: ")) + p.name;
+        case PkgKind::VendorInstaller: return std::wstring(L"Run the installer: ") + p.name;
+        case PkgKind::Tool: return std::wstring(L"Start ") + p.name;
+        case PkgKind::WebPage: return std::wstring(L"Open the download page: ") + p.name;
         case PkgKind::Archive: return p.name;
     }
     return p.name;
@@ -112,8 +111,8 @@ std::vector<PlanItem> makePlan(const std::vector<DeviceFinding>& devices, const 
         if (d.status != DevStatus::NoDriver && d.status != DevStatus::WrongDriver) continue;
         std::wstring why = std::wstring(d.kind->name) + L": ";
         why += d.status == DevStatus::NoDriver
-                   ? tr(L"no driver.", L"brak sterownika.")
-                   : std::wstring(tr(L"wrong driver (", L"zły sterownik (")) + d.service + L").";
+                   ? L"no driver."
+                   : std::wstring(L"wrong driver (") + d.service + L").";
 
         // A radio that needs WinUSB: install it automatically where this build
         // can (libwdi), and fall back to Zadig otherwise.
@@ -129,14 +128,10 @@ std::vector<PlanItem> makePlan(const std::vector<DeviceFinding>& devices, const 
             it.checked = true;
             it.key = L"winusb:" + hex4(d.targetVid) + L"-" + hex4(d.targetPid) + L"-" +
                      std::to_wstring(d.targetMi);
-            it.title = std::wstring(tr(L"Install the WinUSB driver (automatic) for ",
-                                       L"Zainstaluj sterownik WinUSB (automatycznie) dla ")) +
+            it.title = std::wstring(L"Install the WinUSB driver (automatic) for ") +
                        d.kind->name;
-            it.reason = why + tr(L" The driver is installed for you -- no Zadig window. Needs administrator "
-                                 L"rights and your confirmation; it adds a driver certificate (see the prompt).",
-                                 L" Sterownik zostanie zainstalowany za Ciebie -- bez okna Zadiga. Wymaga "
-                                 L"uprawnień administratora i Twojego potwierdzenia; dodaje certyfikat sterownika "
-                                 L"(zobacz pytanie).");
+            it.reason = why + L" The driver is installed for you -- no Zadig window. Needs administrator "
+                                 L"rights and your confirmation; it adds a driver certificate (see the prompt).";
             add(it);
             continue;
         }
@@ -147,8 +142,7 @@ std::vector<PlanItem> makePlan(const std::vector<DeviceFinding>& devices, const 
     if (sdrplayPresent && !sys.sdrplayApi)
         if (const Package* p = findPackage(L"sdrplay-api"))
             add(packageItem(*p, true,
-                            tr(L"An SDRplay RSP is plugged in and the SDRplay API is not installed.",
-                               L"Podłączono SDRplay RSP, a SDRplay API nie jest zainstalowane.")));
+                            L"An SDRplay RSP is plugged in and the SDRplay API is not installed."));
 
     for (const ProgramFinding& f : programs) {
         const ProgramProfile& prof = *f.profile;
@@ -156,8 +150,7 @@ std::vector<PlanItem> makePlan(const std::vector<DeviceFinding>& devices, const 
             if (const Package* p = findPackage(prof.needsPackage))
                 add(packageItem(*p, false,
                                 std::wstring(prof.name) +
-                                    tr(L" uses the SDRplay API, which is not installed.",
-                                       L" używa SDRplay API, które nie jest zainstalowane.")));
+                                    L" uses the SDRplay API, which is not installed."));
 
         if (prof.rtl != RtlPolicy::ExeDir && prof.rtl != RtlPolicy::FixedDir) continue;
         if (f.dir.empty() || !f.siblingOk) continue;
@@ -184,21 +177,18 @@ std::vector<PlanItem> makePlan(const std::vector<DeviceFinding>& devices, const 
         it.replaces = existing != nullptr;
         it.checked = rtlPresent && !it.replaces;
         it.key = L"copy:" + lower(f.dir);
-        it.title = std::wstring(tr(L"Put rtlsdr.dll (", L"Wgraj rtlsdr.dll (")) + archName(a) +
-                   tr(L", RTL-SDR Blog V1.4.0) for ", L", RTL-SDR Blog V1.4.0) dla ") + prof.name + L": " + f.dir;
-        it.reason = it.replaces ? tr(L"An rtlsdr.dll is already there: it is backed up first and can be restored.",
-                                     L"Jest już tam rtlsdr.dll: najpierw zostanie zachowana kopia, którą można przywrócić.")
-                                : tr(L"There is no rtlsdr.dll there yet.", L"Nie ma tam jeszcze rtlsdr.dll.");
-        if (!rtlPresent) it.reason += tr(L" (No RTL-SDR is plugged in right now.)", L" (Teraz nie podłączono RTL-SDR.)");
+        it.title = std::wstring(L"Put rtlsdr.dll (") + archName(a) +
+                   L", RTL-SDR Blog V1.4.0) for " + prof.name + L": " + f.dir;
+        it.reason = it.replaces ? L"An rtlsdr.dll is already there: it is backed up first and can be restored."
+                                : L"There is no rtlsdr.dll there yet.";
+        if (!rtlPresent) it.reason += L" (No RTL-SDR is plugged in right now.)";
 
         const bool vc = a == Arch::X64 ? sys.vcrtX64 : sys.vcrtX86;
         if (!vc)
             if (const Package* p = findPackage(a == Arch::X64 ? L"vcredist-x64" : L"vcredist-x86")) {
                 PlanItem v = packageItem(*p, it.checked,
-                                         tr(L"rtlsdr.dll (RTL-SDR Blog build) needs Microsoft's Visual C++ runtime "
-                                            L"(VCRUNTIME140.dll), which is not installed.",
-                                            L"rtlsdr.dll (wersja RTL-SDR Blog) potrzebuje środowiska Microsoft Visual "
-                                            L"C++ (VCRUNTIME140.dll), którego nie ma."));
+                                         L"rtlsdr.dll (RTL-SDR Blog build) needs Microsoft's Visual C++ runtime "
+                                            L"(VCRUNTIME140.dll), which is not installed.");
                 it.linkedKey = v.key;
                 add(v);
             }

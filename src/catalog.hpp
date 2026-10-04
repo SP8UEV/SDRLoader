@@ -60,8 +60,7 @@ struct DeviceKind {
     DriverRule rule;
     int iface;                   // NeedsWinUsb: the interface that needs it (MI_xx), -1 = the device itself
     const wchar_t* fixPackage;   // the package that provides the driver, or nullptr
-    const wchar_t* noteEn;
-    const wchar_t* notePl;
+    const wchar_t* note;
 };
 
 // Where a program wants rtlsdr.dll.
@@ -82,8 +81,7 @@ struct ProgramProfile {
     const wchar_t* markerDir;       // also "found" when this folder exists, even without the .exe
     const wchar_t* requireSibling;  // ExeDir: only when a file like this is beside the .exe
     const wchar_t* needsPackage;    // offered when the program is found and this is missing
-    const wchar_t* noteEn;
-    const wchar_t* notePl;
+    const wchar_t* note;
     // FixedDir: files beside the .exe the program loads BEFORE fixedDir. When one
     // is there, a copy in fixedDir would never be used, so none is proposed.
     std::vector<const wchar_t*> loadsFirst = {};

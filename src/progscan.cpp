@@ -1,6 +1,5 @@
 #include "progscan.hpp"
 
-#include "i18n.hpp"
 
 #include <windows.h>
 #include <objbase.h>
@@ -149,7 +148,7 @@ public:
             } else if (name.size() > 4 && iequals(name.substr(name.size() - 4), L".lnk")) {
                 const std::wstring target = resolveShortcut(joinPath(dir, name));
                 if (!target.empty() && profileForExe(fileName(target)) && fileExists(target))
-                    addExe(target, tr(L"shortcut", L"skrót"));
+                    addExe(target, L"shortcut");
             }
         } while (FindNextFileW(h, &fd));
         FindClose(h);
@@ -173,8 +172,8 @@ public:
             const std::wstring icon = iconPath(regValue(s, L"DisplayIcon"));
             RegCloseKey(s);
             if (!icon.empty() && profileForExe(fileName(icon)) && fileExists(icon))
-                addExe(icon, tr(L"installed programs", L"zainstalowane programy"));
-            if (!loc.empty() && dirExists(loc)) walk(loc, 1, tr(L"installed programs", L"zainstalowane programy"));
+                addExe(icon, L"installed programs");
+            if (!loc.empty() && dirExists(loc)) walk(loc, 1, L"installed programs");
         }
         RegCloseKey(h);
     }
@@ -194,7 +193,7 @@ public:
         for (const ProgramProfile& p : programProfiles()) {
             if (!p.markerDir || seen.count(p.id)) continue;
             if (dirExists(expandEnv(p.markerDir))) {
-                r_.programs.push_back(describeProgram(p, L"", tr(L"its data folder", L"jego folder danych")));
+                r_.programs.push_back(describeProgram(p, L"", L"its data folder"));
                 seen.insert(p.id);
             }
         }
@@ -282,10 +281,10 @@ ProgramScanResult scanPrograms(const ProgramScanOptions& o) {
     ProgramScanResult r;
     const HRESULT com = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     Scanner s(o, r);
-    const wchar_t* stdScan = tr(L"standard scan", L"zwykłe skanowanie");
+    const wchar_t* stdScan = L"standard scan";
 
     if (o.standard) {
-        if (o.status) o.status(tr(L"installed programs", L"zainstalowane programy"));
+        if (o.status) o.status(L"installed programs");
         s.uninstallEntries(HKEY_LOCAL_MACHINE, KEY_WOW64_64KEY);
         s.uninstallEntries(HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY);
         s.uninstallEntries(HKEY_CURRENT_USER, 0);
@@ -325,12 +324,12 @@ ProgramScanResult scanPrograms(const ProgramScanOptions& o) {
     }
     for (const std::wstring& f : o.extraFolders) {
         if (o.status) o.status(f);
-        s.walk(f, 8, tr(L"chosen folder", L"wybrany folder"));
+        s.walk(f, 8, L"chosen folder");
     }
     if (o.deep) {
         for (const std::wstring& drive : fixedDrives()) {
             if (o.status) o.status(drive);
-            s.walk(drive, 24, tr(L"full scan", L"pełne skanowanie"));
+            s.walk(drive, 24, L"full scan");
         }
     }
     s.finish();

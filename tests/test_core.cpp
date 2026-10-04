@@ -2,7 +2,6 @@
 #include "../src/actions.hpp"
 #include "../src/catalog.hpp"
 #include "../src/driverinstall.hpp"
-#include "../src/i18n.hpp"
 #include "../src/planner.hpp"
 #include "../src/progscan.hpp"
 #include "../src/usbscan.hpp"
@@ -51,7 +50,8 @@ static void testStrings() {
     CHECK(parentDir(L"C:\\a\\b.exe") == L"C:\\a");
     CHECK(parentDir(L"C:\\b.exe") == L"C:\\");
     CHECK(fileName(L"C:\\a\\b.exe") == L"b.exe");
-    CHECK(narrow(widen("zażółć")) == "zażółć");
+    CHECK(narrow(widen("caf\xc3\xa9 \xe2\x9c\x93 \xe6\x97\xa5\xe6\x9c\xac")) ==
+          "caf\xc3\xa9 \xe2\x9c\x93 \xe6\x97\xa5\xe6\x9c\xac");  // 2-, 3-byte UTF-8 round-trip
     CHECK(quoteArg(L"plain") == L"plain");
     CHECK(quoteArg(L"with space") == L"\"with space\"");
     CHECK(quoteArg(L"C:\\dir with space\\") == L"\"C:\\dir with space\\\\\"");
@@ -441,7 +441,6 @@ static void testDescribe() {
 }
 
 int wmain() {
-    setLanguage(Lang::En);
     testStrings();
     testSha256();
     testPe();

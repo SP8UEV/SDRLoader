@@ -3,7 +3,6 @@
 //   --folder <path>   also look in this folder (repeatable)
 //   --elevated        set by the program itself when it restarts as administrator
 #include "gui.hpp"
-#include "i18n.hpp"
 
 #include <shellapi.h>
 
@@ -11,7 +10,6 @@
 #include <vector>
 
 int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int) {
-    sdi::detectLanguage();
     std::vector<std::wstring> folders;
     bool elevated = false;
     int argc = 0;

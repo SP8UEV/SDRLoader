@@ -42,7 +42,6 @@ endif()
 
 add_library(sdi_core STATIC
   src/util.cpp
-  src/i18n.cpp
   src/net.cpp
   src/catalog.cpp
   src/usbscan.cpp

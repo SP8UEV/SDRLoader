@@ -1,6 +1,5 @@
 #include "net.hpp"
 
-#include "i18n.hpp"
 #include "util.hpp"
 #include "version.hpp"
 
@@ -49,7 +48,7 @@ bool download(const std::wstring& url, const std::wstring& dest, uint64_t maxByt
     uc.dwUrlPathLength = 4096;
     uc.dwExtraInfoLength = 1;  // keep the query string with the path
     if (!WinHttpCrackUrl(url.c_str(), 0, 0, &uc) || uc.nScheme != INTERNET_SCHEME_HTTPS) {
-        err = tr(L"only https:// addresses are fetched", L"pobierane są tylko adresy https://");
+        err = L"only https:// addresses are fetched";
         return false;
     }
     std::wstring object(path, uc.dwUrlPathLength);
@@ -95,7 +94,7 @@ bool download(const std::wstring& url, const std::wstring& dest, uint64_t maxByt
                         &status, &len, WINHTTP_NO_HEADER_INDEX);
     if (status != 200) {
         wchar_t b[96];
-        swprintf(b, 96, L"%ls %lu", tr(L"the server answered HTTP", L"serwer odpowiedział HTTP"),
+        swprintf(b, 96, L"%ls %lu", L"the server answered HTTP",
                  static_cast<unsigned long>(status));
         err = b;
         return false;
@@ -107,7 +106,7 @@ bool download(const std::wstring& url, const std::wstring& dest, uint64_t maxByt
                             WINHTTP_NO_HEADER_INDEX))
         total = wcstoull(cl, nullptr, 10);
     if (total > maxBytes) {
-        err = tr(L"the file is larger than expected -- not fetched", L"plik jest większy niż oczekiwano -- nie pobrano");
+        err = L"the file is larger than expected -- not fetched";
         return false;
     }
 
@@ -122,7 +121,7 @@ bool download(const std::wstring& url, const std::wstring& dest, uint64_t maxByt
     bool ok = true;
     for (;;) {
         if (cancel && cancel->load()) {
-            err = tr(L"cancelled", L"anulowano");
+            err = L"cancelled";
             ok = false;
             break;
         }
@@ -135,7 +134,7 @@ bool download(const std::wstring& url, const std::wstring& dest, uint64_t maxByt
         if (n == 0) break;
         got += n;
         if (got > maxBytes) {
-            err = tr(L"the file is larger than expected -- not used", L"plik jest większy niż oczekiwano -- nie użyto");
+            err = L"the file is larger than expected -- not used";
             ok = false;
             break;
         }
@@ -149,7 +148,7 @@ bool download(const std::wstring& url, const std::wstring& dest, uint64_t maxByt
     }
     CloseHandle(f);
     if (ok && total && got != total) {
-        err = tr(L"the download was cut short", L"pobieranie zostało przerwane");
+        err = L"the download was cut short";
         ok = false;
     }
     if (ok && !MoveFileExW(part.c_str(), dest.c_str(), MOVEFILE_REPLACE_EXISTING)) {

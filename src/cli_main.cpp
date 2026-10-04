@@ -8,7 +8,6 @@
 // write is this program's own cache in %LOCALAPPDATA%\SDRLoader.
 #include "actions.hpp"
 #include "catalog.hpp"
-#include "i18n.hpp"
 #include "planner.hpp"
 #include "progscan.hpp"
 #include "usbscan.hpp"
@@ -47,15 +46,15 @@ std::wstring dlls(const std::vector<DllInfo>& v) {
 
 int scan(bool deep, const std::vector<std::wstring>& folders) {
     out(std::wstring(SDI_PRODUCT_W L" " SDI_VERSION_W L" -- ") +
-        tr(L"scan (nothing is changed)", L"skanowanie (nic nie jest zmieniane)"));
+        L"scan (nothing is changed)");
     out(L"");
 
     const std::vector<DeviceFinding> devices = evaluateDevices(enumerateUsb());
-    out(tr(L"SDR radios plugged in:", L"Podłączone odbiorniki SDR:"));
-    if (devices.empty()) out(std::wstring(L"  ") + tr(L"(none recognised)", L"(nie rozpoznano żadnego)"));
+    out(L"SDR radios plugged in:");
+    if (devices.empty()) out(std::wstring(L"  ") + L"(none recognised)");
     for (const DeviceFinding& d : devices) {
         out(L"  " + std::wstring(d.kind->name) + L"  [" + statusText(d.status) + L"]  " +
-            tr(L"driver: ", L"sterownik: ") + (d.service.empty() ? std::wstring(L"-") : d.service));
+            L"driver: " + (d.service.empty() ? std::wstring(L"-") : d.service));
         out(L"      " + adviceFor(d));
         out(L"      " + d.instanceId);
     }
@@ -65,39 +64,39 @@ int scan(bool deep, const std::vector<std::wstring>& folders) {
     o.deep = deep;
     o.extraFolders = folders;
     const ProgramScanResult progs = scanPrograms(o);
-    out(tr(L"SDR programs:", L"Programy SDR:"));
-    if (progs.programs.empty()) out(std::wstring(L"  ") + tr(L"(none found)", L"(nie znaleziono)"));
+    out(L"SDR programs:");
+    if (progs.programs.empty()) out(std::wstring(L"  ") + L"(none found)");
     for (const ProgramFinding& f : progs.programs) {
         std::wstring rtl = dlls(f.rtlDlls);
-        if (f.profile->rtl == RtlPolicy::ShipsOwn) rtl = tr(L"its own", L"własny");
-        if (f.profile->rtl == RtlPolicy::None) rtl = tr(L"not used", L"nieużywany");
-        if (f.profile->requireSibling && !f.siblingOk) rtl += tr(L" (no ExtIO for RTL here)", L" (brak tu ExtIO dla RTL)");
-        if (!f.shadowDll.empty()) rtl = f.shadowDll + tr(L" (loaded first)", L" (ładowany jako pierwszy)");
+        if (f.profile->rtl == RtlPolicy::ShipsOwn) rtl = L"its own";
+        if (f.profile->rtl == RtlPolicy::None) rtl = L"not used";
+        if (f.profile->requireSibling && !f.siblingOk) rtl += L" (no ExtIO for RTL here)";
+        if (!f.shadowDll.empty()) rtl = f.shadowDll + L" (loaded first)";
         out(L"  " + std::wstring(f.profile->name) + L"  [" + archName(f.arch) + L"]  " + f.dir);
-        out(L"      rtlsdr.dll: " + rtl + L"   (" + tr(L"found by: ", L"znaleziono przez: ") + f.foundBy + L")");
+        out(L"      rtlsdr.dll: " + rtl + L"   (" + L"found by: " + f.foundBy + L")");
         if (!f.exePath.empty()) out(L"      " + f.exePath);
     }
     if (!progs.looseDlls.empty()) {
-        out(tr(L"Other rtlsdr.dll files:", L"Inne pliki rtlsdr.dll:"));
+        out(L"Other rtlsdr.dll files:");
         for (const DllInfo& d : progs.looseDlls)
             out(L"  " + d.path + L"  [" + archName(d.arch) + L", " + formatBytes(d.size) + L"]");
     }
-    out(std::wstring(tr(L"Folders looked in: ", L"Przejrzane foldery: ")) + std::to_wstring(progs.foldersVisited));
+    out(std::wstring(L"Folders looked in: ") + std::to_wstring(progs.foldersVisited));
     out(L"");
 
     const SystemState sys = probeSystem();
-    out(tr(L"System:", L"System:"));
-    out(std::wstring(L"  Visual C++ runtime x64: ") + (sys.vcrtX64 ? tr(L"yes", L"tak") : tr(L"no", L"nie")) +
-        L", x86: " + (sys.vcrtX86 ? tr(L"yes", L"tak") : tr(L"no", L"nie")));
+    out(L"System:");
+    out(std::wstring(L"  Visual C++ runtime x64: ") + (sys.vcrtX64 ? L"yes" : L"no") +
+        L", x86: " + (sys.vcrtX86 ? L"yes" : L"no"));
     out(std::wstring(L"  SDRplay API: ") +
-        (sys.sdrplayApi ? sys.sdrplayApiDir : std::wstring(tr(L"not installed", L"nie zainstalowane"))));
+        (sys.sdrplayApi ? sys.sdrplayApiDir : std::wstring(L"not installed")));
     out(L"");
 
     ActionContext c = defaultContext();
     const RtlReference ref = rtlReference(c);
     const std::vector<PlanItem> plan = makePlan(devices, progs.programs, sys, ref);
-    out(tr(L"Proposed actions ([x] = ticked by default):", L"Proponowane czynności ([x] = domyślnie zaznaczone):"));
-    if (plan.empty()) out(std::wstring(L"  ") + tr(L"(nothing to do)", L"(nic do zrobienia)"));
+    out(L"Proposed actions ([x] = ticked by default):");
+    if (plan.empty()) out(std::wstring(L"  ") + L"(nothing to do)");
     for (const PlanItem& p : plan) {
         out(std::wstring(L"  [") + (p.checked ? L"x" : L" ") + L"] " + p.title);
         out(L"      " + p.reason);
@@ -117,20 +116,16 @@ int listPayload() {
 
 void help() {
     out(SDI_PRODUCT_W L" " SDI_VERSION_W);
-    out(tr(L"Usage:", L"Użycie:"));
-    out(tr(L"  sdrloader-cli --scan [--deep] [--folder <path>]...   show what is found and proposed",
-           L"  sdrloader-cli --scan [--deep] [--folder <ścieżka>]...  pokaż, co znaleziono i co proponuję"));
-    out(tr(L"  sdrloader-cli --list-payload                          files an offline package may hold",
-           L"  sdrloader-cli --list-payload                          pliki, które może zawierać paczka offline"));
+    out(L"Usage:");
+    out(L"  sdrloader-cli --scan [--deep] [--folder <path>]...   show what is found and proposed");
+    out(L"  sdrloader-cli --list-payload                          files an offline package may hold");
     out(L"  --version   --help");
-    out(tr(L"Installing is done in the window: sdrloader.exe",
-           L"Instalacja odbywa się w oknie: sdrloader.exe"));
+    out(L"Installing is done in the window: sdrloader.exe");
 }
 
 }  // namespace
 
 int wmain(int argc, wchar_t** argv) {
-    detectLanguage();
     bool doScan = false, deep = false, payload = false;
     std::vector<std::wstring> folders;
     for (int i = 1; i < argc; ++i) {

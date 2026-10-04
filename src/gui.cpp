@@ -1,7 +1,6 @@
 #include "gui.hpp"
 
 #include "actions.hpp"
-#include "i18n.hpp"
 #include "planner.hpp"
 #include "progscan.hpp"
 #include "usbscan.hpp"
@@ -108,8 +107,8 @@ void updateButtons() {
     EnableWindow(g.install, !b && !g.plan.empty());
     EnableWindow(g.undo, !b && hasUndo(defaultContext().backupsDir));
     EnableWindow(g.deep, !b || g.scanningDeep);
-    SetWindowTextW(g.deep, b && g.scanningDeep ? tr(L"Stop the full scan", L"Zatrzymaj pełne skanowanie")
-                                               : tr(L"Full scan of all drives...", L"Pełne skanowanie dysków..."));
+    SetWindowTextW(g.deep, b && g.scanningDeep ? L"Stop the full scan"
+                                               : L"Full scan of all drives...");
     EnableWindow(g.lvPlan, !b);
 }
 
@@ -178,38 +177,37 @@ void fillLists() {
     for (size_t i = 0; i < g.devices.size(); ++i) {
         const DeviceFinding& d = g.devices[i];
         addRow(g.lvDev,
-               {d.kind->name, d.service.empty() ? std::wstring(tr(L"(none)", L"(brak)")) : d.service, statusText(d.status),
+               {d.kind->name, d.service.empty() ? std::wstring(L"(none)") : d.service, statusText(d.status),
                 adviceFor(d)},
                static_cast<LPARAM>(i));
     }
     if (g.devices.empty())
-        addRow(g.lvDev, {tr(L"No known SDR radio is plugged in.", L"Nie podłączono żadnego znanego odbiornika SDR."), L"",
-                         L"", tr(L"Plug it in and press Scan again.", L"Podłącz go i kliknij Skanuj ponownie.")},
+        addRow(g.lvDev, {L"No known SDR radio is plugged in.", L"",
+                         L"", L"Plug it in and press Scan again."},
                -1);
 
     for (size_t i = 0; i < g.programs.programs.size(); ++i) {
         const ProgramFinding& f = g.programs.programs[i];
         std::wstring dlls = dllText(f.rtlDlls);
-        if (f.profile->rtl == RtlPolicy::ShipsOwn) dlls = tr(L"its own", L"własny");
-        if (f.profile->rtl == RtlPolicy::None) dlls = tr(L"not used", L"nieużywany");
+        if (f.profile->rtl == RtlPolicy::ShipsOwn) dlls = L"its own";
+        if (f.profile->rtl == RtlPolicy::None) dlls = L"not used";
         if (f.profile->requireSibling && !f.siblingOk)
-            dlls += tr(L" (no ExtIO for RTL here)", L" (brak tu ExtIO dla RTL)");
+            dlls += L" (no ExtIO for RTL here)";
         if (!f.shadowDll.empty())
-            dlls = f.shadowDll + tr(L" (loaded first)", L" (ładowany jako pierwszy)");
+            dlls = f.shadowDll + L" (loaded first)";
         addRow(g.lvProg,
                {f.profile->name, f.dir.empty() ? f.exePath : f.dir, archName(f.arch), dlls, f.foundBy},
                static_cast<LPARAM>(i));
     }
     for (const DllInfo& d : g.programs.looseDlls)
         addRow(g.lvProg,
-               {tr(L"rtlsdr.dll (no program recognised)", L"rtlsdr.dll (nie rozpoznano programu)"), parentDir(d.path),
+               {L"rtlsdr.dll (no program recognised)", parentDir(d.path),
                 archName(d.arch), formatBytes(d.size), L""},
                -1);
     if (g.programs.programs.empty() && g.programs.looseDlls.empty())
         addRow(g.lvProg,
-               {tr(L"No known SDR program found.", L"Nie znaleziono znanego programu SDR."),
-                tr(L"A portable program elsewhere? Use \"Add folder\" or the full scan.",
-                   L"Program przenośny w innym miejscu? Użyj \"Dodaj folder\" albo pełnego skanowania."),
+               {L"No known SDR program found.",
+                L"A portable program elsewhere? Use \"Add folder\" or the full scan.",
                 L"", L"", L""},
                -1);
 
@@ -223,7 +221,7 @@ void fillLists() {
         ListView_SetCheckState(g.lvPlan, row, p.checked);
     }
     if (g.plan.empty())
-        addRow(g.lvPlan, {tr(L"Nothing to do -- everything found is in order.", L"Nic do zrobienia -- wszystko, co znaleziono, jest w porządku."),
+        addRow(g.lvPlan, {L"Nothing to do -- everything found is in order.",
                           L"", L""},
                -1);
     g.filling = false;
@@ -250,12 +248,12 @@ void startScan(bool deep) {
     o.deep = deep;
     o.extraFolders = g.extraFolders;
     o.cancel = &g.cancel;
-    o.status = [](const std::wstring& s) { postStatus(std::wstring(tr(L"Looking in: ", L"Przeszukuję: ")) + s); };
+    o.status = [](const std::wstring& s) { postStatus(std::wstring(L"Looking in: ") + s); };
     g.scanningDeep = deep;
-    setStatus(tr(L"Scanning...", L"Skanowanie..."));
+    setStatus(L"Scanning...");
     startWorker([o] {
         auto out = std::make_unique<ScanOutput>();
-        postStatus(tr(L"Checking USB devices...", L"Sprawdzam urządzenia USB..."));
+        postStatus(L"Checking USB devices...");
         out->devices = evaluateDevices(enumerateUsb());
         out->programs = scanPrograms(o);
         out->sys = probeSystem();
@@ -269,7 +267,7 @@ void startScan(bool deep) {
 void startRun(std::vector<PlanItem> items) {
     g.scanningDeep = false;
     appendLog(L"");
-    appendLog(tr(L"=== Installing ===", L"=== Instalacja ==="));
+    appendLog(L"=== Installing ===");
     startWorker([items] {
         ActionContext c = defaultContext();
         const auto toFile = c.log;
@@ -297,7 +295,7 @@ void startRun(std::vector<PlanItem> items) {
 void startUndo() {
     g.scanningDeep = false;
     appendLog(L"");
-    appendLog(tr(L"=== Undoing the last installation ===", L"=== Cofanie ostatniej instalacji ==="));
+    appendLog(L"=== Undoing the last installation ===");
     startWorker([] {
         ActionContext c = defaultContext();
         const auto toFile = c.log;
@@ -319,7 +317,7 @@ bool pickFolder(std::wstring& out) {
     DWORD opts = 0;
     d->GetOptions(&opts);
     d->SetOptions(opts | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
-    d->SetTitle(tr(L"Folder with an SDR program", L"Folder z programem SDR"));
+    d->SetTitle(L"Folder with an SDR program");
     bool ok = false;
     if (SUCCEEDED(d->Show(g.wnd))) {
         IShellItem* item = nullptr;
@@ -357,7 +355,7 @@ void onInstall() {
     for (const PlanItem& p : g.plan)
         if (p.checked) items.push_back(p);
     if (items.empty()) {
-        MessageBoxW(g.wnd, tr(L"Tick at least one action first.", L"Najpierw zaznacz przynajmniej jedną czynność."),
+        MessageBoxW(g.wnd, L"Tick at least one action first.",
                     SDI_PRODUCT_W, MB_OK | MB_ICONINFORMATION);
         return;
     }
@@ -370,53 +368,44 @@ void onInstall() {
     if ((!locked.empty() || needsAdmin) && !g.elevated) {
         std::wstring reason;
         if (needsAdmin)
-            reason += tr(L"\n  installing a USB driver", L"\n  instalacja sterownika USB");
+            reason += L"\n  installing a USB driver";
         if (!locked.empty())
-            reason += tr(L"\n  writing to:", L"\n  zapis do:") + locked;
+            reason += L"\n  writing to:" + locked;
         const std::wstring q =
-            std::wstring(tr(L"These need administrator rights:", L"To wymaga uprawnień administratora:")) +
+            std::wstring(L"These need administrator rights:") +
             reason +
-            tr(L"\n\nRestart this program as administrator?\n(No: carry on without -- those steps will fail.)",
-               L"\n\nUruchomić ten program ponownie jako administrator?\n(Nie: kontynuuj bez tego -- te kroki się nie "
-               L"udadzą.)");
+            L"\n\nRestart this program as administrator?\n(No: carry on without -- those steps will fail.)";
         const int a = MessageBoxW(g.wnd, q.c_str(), SDI_PRODUCT_W, MB_YESNOCANCEL | MB_ICONQUESTION);
         if (a == IDCANCEL) return;
         if (a == IDYES) {
             if (relaunchElevated())
                 DestroyWindow(g.wnd);
             else
-                appendLog(tr(L"The restart as administrator was declined.", L"Odmówiono ponownego uruchomienia jako administrator."));
+                appendLog(L"The restart as administrator was declined.");
             return;
         }
     }
     std::wstring list;
     for (const PlanItem& p : items) list += L"\n  - " + p.title;
     const std::wstring q =
-        std::wstring(tr(L"These actions will now be carried out:", L"Teraz zostaną wykonane te czynności:")) + list +
-        tr(L"\n\nEvery file is checked against the publisher's before use. A file that is replaced is backed up first "
-           L"(\"Undo last installation\" puts it back). Manufacturers' installers show their own licences.\n\nContinue?",
-           L"\n\nKażdy plik jest przed użyciem sprawdzany z plikiem wydawcy. Zastępowany plik jest najpierw kopiowany "
-           L"(\"Cofnij ostatnią instalację\" go przywraca). Instalatory producentów pokazują własne licencje.\n\n"
-           L"Kontynuować?");
+        std::wstring(L"These actions will now be carried out:") + list +
+        L"\n\nEvery file is checked against the publisher's before use. A file that is replaced is backed up first "
+           L"(\"Undo last installation\" puts it back). Manufacturers' installers show their own licences.\n\nContinue?";
     if (MessageBoxW(g.wnd, q.c_str(), SDI_PRODUCT_W, MB_YESNO | MB_ICONQUESTION) == IDYES) startRun(items);
 }
 
 void onAbout() {
     std::wstring t = std::wstring(SDI_PRODUCT_W L" " SDI_VERSION_W L"\n") +
-                     tr(L"Open source, MIT licence. Not affiliated with any manufacturer or program it lists; their "
-                        L"names only say what it works with.\n\n",
-                        L"Otwarte oprogramowanie, licencja MIT. Niezwiązany z żadnym z wymienionych producentów ani "
-                        L"programów; ich nazwy mówią tylko, z czym współpracuje.\n\n") +
-                     tr(L"What it can install, and under which licence:\n", L"Co może zainstalować i na jakiej licencji:\n");
+                     L"Open source, MIT licence. Not affiliated with any manufacturer or program it lists; their "
+                        L"names only say what it works with.\n\n" +
+                     L"What it can install, and under which licence:\n";
     for (const Package& p : packages()) {
         t += std::wstring(L"\n- ") + p.name + L"\n   " + p.licence + L"\n   " + p.source;
         if (p.payload == Payload::Never)
-            t += tr(L"\n   (always fetched from the publisher)", L"\n   (zawsze pobierany od wydawcy)");
+            t += L"\n   (always fetched from the publisher)";
     }
-    t += tr(L"\n\nFiles come only from the publishers' own addresses and are checked (size and SHA-256, or the digital "
-            L"signature) before use. Nothing about this computer is sent anywhere.\n\nData folder: ",
-            L"\n\nPliki pochodzą tylko z adresów wydawców i są sprawdzane (rozmiar i SHA-256 albo podpis cyfrowy) przed "
-            L"użyciem. Żadne informacje o tym komputerze nie są nigdzie wysyłane.\n\nFolder danych: ") +
+    t += L"\n\nFiles come only from the publishers' own addresses and are checked (size and SHA-256, or the digital "
+            L"signature) before use. Nothing about this computer is sent anywhere.\n\nData folder: " +
          dataDir();
     MessageBoxW(g.wnd, t.c_str(), SDI_PRODUCT_W, MB_OK | MB_ICONINFORMATION);
 }
@@ -462,43 +451,40 @@ HWND child(const wchar_t* cls, const wchar_t* text, DWORD style, int id, DWORD e
 
 void createControls() {
     g.intro = child(L"STATIC",
-                    tr(L"Finds the SDR radios plugged into this computer and the SDR programs on it, and proposes what to "
+                    L"Finds the SDR radios plugged into this computer and the SDR programs on it, and proposes what to "
                        L"install. Nothing changes until you press \"Install ticked\"; a file that is replaced is "
                        L"backed up first.",
-                       L"Wyszukuje odbiorniki SDR podłączone do komputera i programy SDR na nim, a potem proponuje, co "
-                       L"zainstalować. Nic się nie zmienia, dopóki nie klikniesz \"Zainstaluj zaznaczone\"; zastępowany "
-                       L"plik jest najpierw kopiowany."),
                     SS_LEFT, IDC_INTRO);
-    g.lblDev = child(L"STATIC", tr(L"SDR radios plugged in", L"Podłączone odbiorniki SDR"), SS_LEFT, IDC_LBL_DEV);
+    g.lblDev = child(L"STATIC", L"SDR radios plugged in", SS_LEFT, IDC_LBL_DEV);
     g.lvDev = makeList(IDC_LV_DEV, false);
-    addColumn(g.lvDev, 0, tr(L"Radio", L"Odbiornik"), 190);
-    addColumn(g.lvDev, 1, tr(L"Driver", L"Sterownik"), 110);
-    addColumn(g.lvDev, 2, tr(L"Status", L"Stan"), 110);
-    addColumn(g.lvDev, 3, tr(L"What it means", L"Co to znaczy"), 560);
+    addColumn(g.lvDev, 0, L"Radio", 190);
+    addColumn(g.lvDev, 1, L"Driver", 110);
+    addColumn(g.lvDev, 2, L"Status", 110);
+    addColumn(g.lvDev, 3, L"What it means", 560);
 
-    g.lblProg = child(L"STATIC", tr(L"SDR programs on this computer", L"Programy SDR na tym komputerze"), SS_LEFT, IDC_LBL_PROG);
+    g.lblProg = child(L"STATIC", L"SDR programs on this computer", SS_LEFT, IDC_LBL_PROG);
     g.lvProg = makeList(IDC_LV_PROG, false);
-    addColumn(g.lvProg, 0, tr(L"Program", L"Program"), 190);
-    addColumn(g.lvProg, 1, tr(L"Folder for rtlsdr.dll", L"Folder na rtlsdr.dll"), 380);
-    addColumn(g.lvProg, 2, tr(L"Build", L"Wersja"), 55);
+    addColumn(g.lvProg, 0, L"Program", 190);
+    addColumn(g.lvProg, 1, L"Folder for rtlsdr.dll", 380);
+    addColumn(g.lvProg, 2, L"Build", 55);
     addColumn(g.lvProg, 3, L"rtlsdr.dll", 200);
-    addColumn(g.lvProg, 4, tr(L"Found by", L"Znaleziono przez"), 130);
+    addColumn(g.lvProg, 4, L"Found by", 130);
 
-    g.lblPlan = child(L"STATIC", tr(L"Proposed actions -- tick what should be done", L"Proponowane czynności -- zaznacz, co zrobić"),
+    g.lblPlan = child(L"STATIC", L"Proposed actions -- tick what should be done",
                       SS_LEFT, IDC_LBL_PLAN);
     g.lvPlan = makeList(IDC_LV_PLAN, true);
-    addColumn(g.lvPlan, 0, tr(L"Action", L"Czynność"), 420);
-    addColumn(g.lvPlan, 1, tr(L"Why", L"Dlaczego"), 380);
-    addColumn(g.lvPlan, 2, tr(L"Licence", L"Licencja"), 260);
+    addColumn(g.lvPlan, 0, L"Action", 420);
+    addColumn(g.lvPlan, 1, L"Why", 380);
+    addColumn(g.lvPlan, 2, L"Licence", 260);
 
     for (HWND h : {g.lblDev, g.lblProg, g.lblPlan}) SendMessageW(h, WM_SETFONT, reinterpret_cast<WPARAM>(g.bold), TRUE);
 
-    g.rescan = child(L"BUTTON", tr(L"Scan again", L"Skanuj ponownie"), BS_PUSHBUTTON | WS_TABSTOP, IDC_RESCAN);
-    g.addFolder = child(L"BUTTON", tr(L"Add folder...", L"Dodaj folder..."), BS_PUSHBUTTON | WS_TABSTOP, IDC_ADDFOLDER);
+    g.rescan = child(L"BUTTON", L"Scan again", BS_PUSHBUTTON | WS_TABSTOP, IDC_RESCAN);
+    g.addFolder = child(L"BUTTON", L"Add folder...", BS_PUSHBUTTON | WS_TABSTOP, IDC_ADDFOLDER);
     g.deep = child(L"BUTTON", L"", BS_PUSHBUTTON | WS_TABSTOP, IDC_DEEP);
-    g.install = child(L"BUTTON", tr(L"Install ticked", L"Zainstaluj zaznaczone"), BS_DEFPUSHBUTTON | WS_TABSTOP, IDC_INSTALL);
-    g.undo = child(L"BUTTON", tr(L"Undo last installation", L"Cofnij ostatnią instalację"), BS_PUSHBUTTON | WS_TABSTOP, IDC_UNDO);
-    g.about = child(L"BUTTON", tr(L"Licences and about", L"Licencje i informacje"), BS_PUSHBUTTON | WS_TABSTOP, IDC_ABOUT);
+    g.install = child(L"BUTTON", L"Install ticked", BS_DEFPUSHBUTTON | WS_TABSTOP, IDC_INSTALL);
+    g.undo = child(L"BUTTON", L"Undo last installation", BS_PUSHBUTTON | WS_TABSTOP, IDC_UNDO);
+    g.about = child(L"BUTTON", L"Licences and about", BS_PUSHBUTTON | WS_TABSTOP, IDC_ABOUT);
     g.progress = child(PROGRESS_CLASSW, L"", PBS_SMOOTH, IDC_PROGRESS);
     SendMessageW(g.progress, PBM_SETRANGE32, 0, 1000);
     g.status = child(L"STATIC", L"", SS_LEFT | SS_ENDELLIPSIS | SS_NOPREFIX, IDC_STATUS);
@@ -518,10 +504,9 @@ void onScanned(std::unique_ptr<ScanOutput> out) {
     int ticked = 0;
     for (const PlanItem& p : g.plan) ticked += p.checked;
     wchar_t b[256];
-    swprintf(b, 256, tr(L"Found %zu radio(s) and %zu program(s); %zu proposed action(s), %d ticked.%ls",
-                        L"Znaleziono odbiorniki: %zu, programy: %zu; proponowane czynności: %zu, zaznaczone: %d.%ls"),
+    swprintf(b, 256, L"Found %zu radio(s) and %zu program(s); %zu proposed action(s), %d ticked.%ls",
              g.devices.size(), g.programs.programs.size(), g.plan.size(), ticked,
-             g.programs.cancelled ? tr(L" (scan stopped early)", L" (skanowanie przerwane)") : L"");
+             g.programs.cancelled ? L" (scan stopped early)" : L"");
     setStatus(b);
     appendLog(b);
     SendMessageW(g.progress, PBM_SETPOS, 0, 0);
@@ -549,7 +534,7 @@ LRESULT CALLBACK wndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                     std::wstring f;
                     if (pickFolder(f)) {
                         g.extraFolders.push_back(f);
-                        appendLog(std::wstring(tr(L"Folder added: ", L"Dodano folder: ")) + f);
+                        appendLog(std::wstring(L"Folder added: ") + f);
                         startScan(false);
                     }
                     break;
@@ -557,14 +542,11 @@ LRESULT CALLBACK wndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                 case IDC_DEEP:
                     if (g.busy && g.scanningDeep) {
                         g.cancel = true;
-                        setStatus(tr(L"Stopping...", L"Zatrzymywanie..."));
+                        setStatus(L"Stopping...");
                     } else if (MessageBoxW(h,
-                                           tr(L"The full scan looks at the file names on every local drive to find SDR "
+                                           L"The full scan looks at the file names on every local drive to find SDR "
                                               L"programs. It can take a few minutes. Nothing is changed, and nothing "
                                               L"leaves this computer.\n\nStart it?",
-                                              L"Pełne skanowanie przegląda nazwy plików na wszystkich dyskach lokalnych, "
-                                              L"aby znaleźć programy SDR. Może potrwać kilka minut. Nic nie jest "
-                                              L"zmieniane i nic nie opuszcza tego komputera.\n\nRozpocząć?"),
                                            SDI_PRODUCT_W, MB_YESNO | MB_ICONQUESTION) == IDYES) {
                         startScan(true);
                     }
@@ -572,12 +554,9 @@ LRESULT CALLBACK wndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                 case IDC_INSTALL: onInstall(); break;
                 case IDC_UNDO:
                     if (MessageBoxW(h,
-                                    tr(L"Put back the files the last installation replaced, and remove the ones it "
+                                    L"Put back the files the last installation replaced, and remove the ones it "
                                        L"added? (Drivers installed by Zadig or by a manufacturer's installer are "
                                        L"removed in Windows' Device Manager or Apps.)",
-                                       L"Przywrócić pliki zastąpione przez ostatnią instalację i usunąć dodane? "
-                                       L"(Sterowniki zainstalowane przez Zadiga lub instalator producenta usuwa się w "
-                                       L"Menedżerze urządzeń albo w Aplikacjach Windows.)"),
                                     SDI_PRODUCT_W, MB_YESNO | MB_ICONQUESTION) == IDYES)
                         startUndo();
                     break;
@@ -606,7 +585,7 @@ LRESULT CALLBACK wndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                 } else if (nh->hwndFrom == g.lvProg && i < g.programs.programs.size() &&
                            (nv->uNewState & LVIS_SELECTED) && !(nv->uOldState & LVIS_SELECTED)) {
                     const ProgramFinding& f = g.programs.programs[i];
-                    setStatus(std::wstring(f.profile->name) + L": " + tr(f.profile->noteEn, f.profile->notePl) +
+                    setStatus(std::wstring(f.profile->name) + L": " + f.profile->note +
                               (f.exePath.empty() ? L"" : L"  [" + f.exePath + L"]"));
                 }
             } else if (nh->code == NM_DBLCLK && nh->hwndFrom == g.lvProg) {
@@ -639,8 +618,7 @@ LRESULT CALLBACK wndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_APP_RAN: {
             std::unique_ptr<RunResult> r(reinterpret_cast<RunResult*>(lp));
             wchar_t b[200];
-            swprintf(b, 200, tr(L"Finished: %d done, %d failed, %d skipped. Checking again...",
-                                L"Koniec: wykonano %d, nie udało się %d, pominięto %d. Sprawdzam ponownie..."),
+            swprintf(b, 200, L"Finished: %d done, %d failed, %d skipped. Checking again...",
                      r->done, r->failed, r->skipped);
             appendLog(b);
             g.busy = false;
@@ -662,8 +640,7 @@ LRESULT CALLBACK wndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_CLOSE:
             if (g.busy &&
                 MessageBoxW(h,
-                            tr(L"Work is still in progress (an installer may be open). Close anyway?",
-                               L"Praca nadal trwa (może być otwarty instalator). Zamknąć mimo to?"),
+                            L"Work is still in progress (an installer may be open). Close anyway?",
                             SDI_PRODUCT_W, MB_YESNO | MB_ICONWARNING) != IDYES)
                 return 0;
             g.cancel = true;
@@ -718,7 +695,7 @@ int runGui(HINSTANCE inst, const std::vector<std::wstring>& extraFolders, bool e
     RegisterClassExW(&wc);
 
     std::wstring title = SDI_PRODUCT_W L" " SDI_VERSION_W;
-    if (g.elevated) title += tr(L" (administrator)", L" (administrator)");
+    if (g.elevated) title += L" (administrator)";
     HWND w = CreateWindowExW(0, wc.lpszClassName, title.c_str(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
                              S(1180), S(860), nullptr, nullptr, inst, nullptr);
     if (!w) return 1;
@@ -726,8 +703,7 @@ int runGui(HINSTANCE inst, const std::vector<std::wstring>& extraFolders, bool e
     UpdateWindow(w);
     updateButtons();
     if (elevatedRestart)
-        appendLog(tr(L"Running as administrator: the scan is repeated, then press Install again.",
-                     L"Działa jako administrator: skanowanie jest powtarzane, potem kliknij ponownie Zainstaluj."));
+        appendLog(L"Running as administrator: the scan is repeated, then press Install again.");
     startScan(false);
 
     MSG m;
