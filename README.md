@@ -80,13 +80,14 @@ UHD); SDRLoader only sets up the USB driver.
 ## Download
 
 Grab a ready-built `.exe` from the [**Releases**](../../releases) page. Every release
-has three archives (each with `sdrloader.exe` and `sdrloader-cli.exe` inside):
+has two archives (each with `sdrloader.exe` and `sdrloader-cli.exe` inside):
 
 - **`SDRLoader.zip`** -- the program; it fetches each driver from its publisher when needed.
-- **`SDRLoader-offline.zip`** -- the same, plus a `payload\` folder with the open-source
-  drivers already inside, each with its source code.
 - **`SDRLoader-winusb.zip`** -- built with automatic WinUSB install (libwdi), so the RTL-SDR
   driver step needs no Zadig window.
+
+SDRLoader never bundles or redistributes drivers -- it only fetches them from their
+publishers, at your request.
 
 Builds are also attached to every CI run under the **Actions** tab (they expire; the
 Releases above do not). `sdrloader.exe` is the window; `sdrloader-cli.exe --scan` prints

@@ -1,8 +1,7 @@
 // cli_main.cpp -- sdrloader-cli.exe: the same scan as text, for support and scripts.
 //
 //   --scan [--deep] [--folder <path>]...  what is plugged in, what is installed, what would be proposed
-//   --list-payload                         the files an offline package may hold (tab-separated)
-//   --lang en|pl   --version   --help
+//   --version   --help
 //
 // It installs nothing and changes nothing on the system; the only thing it may
 // write is this program's own cache in %LOCALAPPDATA%\SDRLoader.
@@ -104,21 +103,10 @@ int scan(bool deep, const std::vector<std::wstring>& folders) {
     return 0;
 }
 
-int listPayload() {
-    for (const Package& p : packages()) {
-        if (p.payload == Payload::Never) continue;
-        out(std::wstring(p.id) + L"\t" + p.file + L"\t" + p.url + L"\t" + std::to_wstring(p.size) + L"\t" +
-            (p.sha256 ? widen(p.sha256) : std::wstring()) + L"\t" + (p.signer ? p.signer : L"") + L"\t" +
-            payloadName(p.payload) + L"\t" + (p.sourceArchive ? p.sourceArchive : L""));
-    }
-    return 0;
-}
-
 void help() {
     out(SDI_PRODUCT_W L" " SDI_VERSION_W);
     out(L"Usage:");
     out(L"  sdrloader-cli --scan [--deep] [--folder <path>]...   show what is found and proposed");
-    out(L"  sdrloader-cli --list-payload                          files an offline package may hold");
     out(L"  --version   --help");
     out(L"Installing is done in the window: sdrloader.exe");
 }
@@ -126,7 +114,7 @@ void help() {
 }  // namespace
 
 int wmain(int argc, wchar_t** argv) {
-    bool doScan = false, deep = false, payload = false;
+    bool doScan = false, deep = false;
     std::vector<std::wstring> folders;
     for (int i = 1; i < argc; ++i) {
         const std::wstring a = argv[i];
@@ -136,8 +124,6 @@ int wmain(int argc, wchar_t** argv) {
             deep = doScan = true;
         else if (a == L"--folder" && i + 1 < argc)
             folders.push_back(argv[++i]), doScan = true;
-        else if (a == L"--list-payload")
-            payload = true;
         else if (a == L"--version") {
             out(SDI_VERSION_W);
             return 0;
@@ -146,7 +132,6 @@ int wmain(int argc, wchar_t** argv) {
             return a == L"--help" || a == L"-h" || a == L"/?" ? 0 : 2;
         }
     }
-    if (payload) return listPayload();
     if (doScan) return scan(deep, folders);
     help();
     return 0;

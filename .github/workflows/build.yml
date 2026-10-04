@@ -61,12 +61,6 @@ jobs:
           Copy-Item build/sdrloader.exe, build/sdrloader-cli.exe, LICENSE, README.md, THIRD-PARTY.md dist/
           Compress-Archive -Path dist/* -DestinationPath SDRLoader.zip
 
-      - name: Offline package (redistributable files with their source code)
-        shell: pwsh
-        run: |
-          ./scripts/fetch-payload.ps1 -Cli build/sdrloader-cli.exe -Out dist/payload
-          Compress-Archive -Path dist/* -DestinationPath SDRLoader-offline.zip
-
       - name: Package with automatic WinUSB (includes libwdi LGPL material)
         shell: pwsh
         run: |
@@ -84,7 +78,6 @@ jobs:
           name: SDRLoader
           path: |
             SDRLoader.zip
-            SDRLoader-offline.zip
             SDRLoader-winusb.zip
 
       # On a version tag (e.g. v0.1.0) attach the built .exe archives to a
@@ -97,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            SDRLoader.zip SDRLoader-offline.zip SDRLoader-winusb.zip \
+            SDRLoader.zip SDRLoader-winusb.zip \
             --repo "${GITHUB_REPOSITORY}" \
             --title "SDRLoader ${GITHUB_REF_NAME}" \
             --notes "Automated build of ${GITHUB_REF_NAME}. See the README for what each archive contains."
