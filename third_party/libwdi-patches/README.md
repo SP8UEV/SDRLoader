@@ -21,7 +21,7 @@ build by re-running the script and pointing CMake at the result.
 
 `config.mingw.h` is the `config.h` the script generates (WinUSB only, 64-bit,
 no WDK; `USER_DIR` points at an empty folder purely to satisfy libwdi's
-`embedder.h` "at least one driver directory" check — no user files are
+`embedder.h` "at least one driver directory" check -- no user files are
 embedded).
 
 ## Build
@@ -30,8 +30,8 @@ embedded).
 scripts/build-libwdi.sh --clone external/libwdi v1.5.1
 ```
 
-Then configure the project with the `-DSDI_WITH_LIBWDI=ON -DLIBWDI_INCLUDE_DIR=…
--DLIBWDI_LIBRARY=…` line the script prints.
+Then configure the project with the `-DSDI_WITH_LIBWDI=ON -DLIBWDI_INCLUDE_DIR=...
+-DLIBWDI_LIBRARY=...` line the script prints.
 
 ## What the result produces
 

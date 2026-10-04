@@ -10,7 +10,7 @@ publisher's digital signature) are pinned in `src/catalog.cpp`.
 
 When built with `-DSDI_WITH_LIBWDI=ON`, the program links **libwdi**
 (LGPL-2.1-or-later, https://github.com/pbatard/libwdi) to install WinUSB
-automatically — the same library Zadig is built on. This is a *linked
+automatically -- the same library Zadig is built on. This is a *linked
 library*, not a fetched file, so the LGPL applies to the distributed binary:
 anyone you give the program to must be able to replace libwdi with their own
 build (ship libwdi's source, or your changes, and keep the program relinkable).

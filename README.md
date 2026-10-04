@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="res/logo.png" alt="SDRLoader" width="300">
+  <img src="res/logo-round.png" alt="SDRLoader" width="280">
 </p>
 
 <h1 align="center">SDRLoader</h1>
 
 <p align="center">
   Finds the SDR radios plugged into your Windows PC and the SDR apps installed on it,
-  then sets up the drivers they need &mdash; and lets you undo it.
+  then sets up the drivers they need -- and lets you undo it.
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 **SDRLoader** is a small, open-source helper for Windows 10 and 11. It scans for the
 SDR radios that are plugged in and the SDR programs on the computer, then proposes
-exactly what to install: the USB driver each radio needs (WinUSB &mdash; automatically,
+exactly what to install: the USB driver each radio needs (WinUSB -- automatically,
 or via Zadig), `rtlsdr.dll` where a program looks for it, and the manufacturers'
 own driver installers. **You decide what happens, every fetched file is verified
 before use, and every replaced file is backed up so the last run can be undone.**
@@ -46,10 +46,10 @@ your request, the way you would by hand.
   existing file start unticked.
 - **Nothing about your computer is sent anywhere.** It goes online only to fetch a file
   you asked for, from that file's publisher.
-- It never redistributes manufacturers' software &mdash; their installers are downloaded
+- It never redistributes manufacturers' software -- their installers are downloaded
   from them and run in front of you, with their own licences.
 - It never touches programs that ship their own drivers (SDR++, SDRangel, SatDump,
-  CubicSDR, Gqrx, SDR Console) &mdash; it only reports them.
+  CubicSDR, Gqrx, SDR Console) -- it only reports them.
 - It never scans whole drives unless you ask, and only ever reads file **names**.
 
 ## Supported radios
@@ -57,13 +57,13 @@ your request, the way you would by hand.
 | Radio | What SDRLoader sets up |
 |---|---|
 | **RTL-SDR** (RTL2832U, incl. Blog V3/V4) | WinUSB (automatic, or via Zadig) + `rtlsdr.dll` for the programs that load it |
-| **HackRF One**, **Airspy R2 / Mini / HF+** | WinUSB &mdash; usually already assigned by Windows (WCID) |
+| **HackRF One**, **Airspy R2 / Mini / HF+** | WinUSB -- usually already assigned by Windows (WCID) |
 | **Nuand bladeRF** | Nuand's installer (driver, libbladeRF, FPGA images) |
 | **ADALM-PLUTO** | Analog Devices' USB drivers |
 | **SDRplay RSP** | opens the SDRplay API download page |
 | **LimeSDR-USB**, **Ettus USRP B200 / B210** | WinUSB (automatic, or via Zadig) |
 | **LimeSDR Mini / Mini 2** | opens FTDI's D3XX driver page (its FT601 bridge can't use WinUSB) |
-| **FUNcube Dongle Pro / Pro+** | nothing &mdash; Windows' own audio + HID drivers |
+| **FUNcube Dongle Pro / Pro+** | nothing -- Windows' own audio + HID drivers |
 
 To actually *use* a LimeSDR or USRP you still install its host software (LimeSuite or
 UHD); SDRLoader only sets up the USB driver.
@@ -75,21 +75,22 @@ UHD); SDRLoader only sets up the USB driver.
 | ChameleonSDR | 64-bit, in `%APPDATA%\C-SDR\PUT_SDR_FILES_HERE` |
 | SDR# (SDRSharp) | beside `SDRSharp*.exe`, in the build it uses (x86 / x64) |
 | HDSDR | beside `HDSDR.exe`, when an RTL ExtIO plug-in is there |
-| SDR++, SDRangel, SatDump, CubicSDR, Gqrx, SDR Console | ship their own &mdash; left untouched |
+| SDR++, SDRangel, SatDump, CubicSDR, Gqrx, SDR Console | ship their own -- left untouched |
 
 ## Download
 
-Builds are produced by CI on every push (see the **Actions** tab). Each run gives three
-archives:
+Grab a ready-built `.exe` from the [**Releases**](../../releases) page. Every release
+has three archives (each with `sdrloader.exe` and `sdrloader-cli.exe` inside):
 
-- **`SDRLoader.zip`** &mdash; the program; it fetches each driver from its publisher when needed.
-- **`SDRLoader-offline.zip`** &mdash; the same, plus a `payload\` folder with the open-source
+- **`SDRLoader.zip`** -- the program; it fetches each driver from its publisher when needed.
+- **`SDRLoader-offline.zip`** -- the same, plus a `payload\` folder with the open-source
   drivers already inside, each with its source code.
-- **`SDRLoader-winusb.zip`** &mdash; built with automatic WinUSB install (libwdi), so the RTL-SDR
+- **`SDRLoader-winusb.zip`** -- built with automatic WinUSB install (libwdi), so the RTL-SDR
   driver step needs no Zadig window.
 
-Two programs are included: `sdrloader.exe` (the window) and `sdrloader-cli.exe --scan`,
-which prints the same scan as text (handy for support requests).
+Builds are also attached to every CI run under the **Actions** tab (they expire; the
+Releases above do not). `sdrloader.exe` is the window; `sdrloader-cli.exe --scan` prints
+the same scan as text (handy for support requests).
 
 ## Automatic WinUSB install (and the certificate)
 
@@ -100,7 +101,7 @@ radio, signs it with a certificate it generates, adds that certificate to the ma
 trusted stores so Windows accepts the driver, and binds WinUSB.
 
 Because it adds a driver certificate and changes a device driver, it needs administrator
-rights **and** a clear yes &mdash; a prompt spells out each step first, and nothing runs
+rights **and** a clear yes -- a prompt spells out each step first, and nothing runs
 until you agree. It changes only that one radio's driver (undo in Device Manager; remove
 the certificate in `certmgr.msc`). This path is compiled in only when the build includes
 libwdi; otherwise SDRLoader proposes Zadig instead.
@@ -117,7 +118,7 @@ cmake --build build
 ```
 
 To compile the automatic WinUSB path in, build libwdi first (it has no CMake build of its
-own &mdash; `scripts/build-libwdi.sh` clones it, applies the patches in
+own -- `scripts/build-libwdi.sh` clones it, applies the patches in
 `third_party/libwdi-patches/`, and produces `libwdi.a`):
 
 ```bash
@@ -135,7 +136,7 @@ A radio or a program is added in one place: [`src/catalog.cpp`](src/catalog.cpp)
 
 The code in this repository is **MIT** ([`LICENSE`](LICENSE)) and contains no third-party
 code. The drivers and installers it fetches are other people's software under their own
-licences, each from its publisher's own address &mdash; see
+licences, each from its publisher's own address -- see
 [`THIRD-PARTY.md`](THIRD-PARTY.md). The optional libwdi build is LGPL-2.1; the program
 stays relinkable and the modifications are shipped (`third_party/libwdi-patches/`).
 
